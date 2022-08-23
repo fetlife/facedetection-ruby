@@ -3,9 +3,9 @@
 require_relative "lib/libfacedetection/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "facedetection"
+  spec.name = "libfacedetection"
   spec.version = Libfacedetection::VERSION
-  spec.authors = ["Andrii Dmytrenko"]
+  spec.authors = ["Fetlife", "Andrii Dmytrenko"]
   spec.email = ["andrii@fetlife.com"]
 
   spec.summary = "Face Detection gem wrapper for libfacedetection"
