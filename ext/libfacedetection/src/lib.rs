@@ -1,15 +1,13 @@
 use anyhow::{Context, Result};
 use opencv;
 use rutie::{methods, module};
-use std::env;
 
 use opencv::core::{self, Size};
 use rutie::{Array, Class, Fixnum, Module, Object, RString, VM};
 
 use opencv::{imgcodecs, imgproc, objdetect, prelude::*, types};
 
-fn do_detection(content: RString) -> Result<Array> {
-    let content = content.to_vec_u8_unchecked();
+fn detect_haar_cascade(content: Vec<u8>) -> Result<Array> {
     let cascade_file_path =
         core::find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false)?;
     let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path)
@@ -28,17 +26,20 @@ fn do_detection(content: RString) -> Result<Array> {
             Size::new(500, 500),
         )
         .context("Failed to run detect_multi_scale")?;
-    match faces.get(0) {
-        Ok(content) => {
-            let mut array = Array::new();
-            array.push(Fixnum::new((content.x as f32 * 0.9) as i64));
-            array.push(Fixnum::new((content.y as f32 * 0.9) as i64));
-            array.push(Fixnum::new((content.width as f32 * 1.25) as i64));
-            array.push(Fixnum::new((content.height as f32 * 1.6) as i64));
-            Ok(array)
-        }
-        Err(_) => Ok(Array::new()),
+    let mut result = Array::new();
+    for face in faces {
+      let mut array = Array::new();
+      array.push(Fixnum::new((face.x as f32 * 0.9) as i64));
+      array.push(Fixnum::new((face.y as f32 * 0.9) as i64));
+      array.push(Fixnum::new((face.width as f32 * 1.25) as i64));
+      array.push(Fixnum::new((face.height as f32 * 1.6) as i64));
+      result.push(array);
     }
+    Ok(result)
+}
+
+fn do_detection(content: Vec<u8>) -> Result<Array> {
+    detect_haar_cascade(content)
 }
 
 module!(Libfacedetection);
@@ -57,7 +58,7 @@ methods!(
                 unreachable!()
             }
         };
-        match do_detection(content) {
+        match do_detection(content.to_vec_u8_unchecked()) {
             Ok(faces) => faces,
             Err(e) => {
                 VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
