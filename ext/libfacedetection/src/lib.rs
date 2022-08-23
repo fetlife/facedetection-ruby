@@ -72,7 +72,7 @@ methods!(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn Init_facedetection() {
+pub extern "C" fn Init_libfacedetection() {
    Module::new("Libfacedetection").define(|klass| {
         klass.def_self("detect", pub_detect);
     });
