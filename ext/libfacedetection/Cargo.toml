@@ -1,0 +1,18 @@
+[package]
+name = "fetlife_opencv"
+version = "0.0.1"
+edition = "2021"
+publish = false
+authors = ["Fetlife <dev@fetlife.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rutie = { version="0.8.4" }
+opencv = "0.66"
+anyhow = "1.0.62"
+
+[lib]
+name = "fetlife_opencv"
+crate-type = ["cdylib"]
+
