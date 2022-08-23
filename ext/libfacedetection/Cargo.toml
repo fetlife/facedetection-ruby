@@ -1,5 +1,5 @@
 [package]
-name = "fetlife_opencv"
+name = "libfacedetection-ruby"
 version = "0.0.1"
 edition = "2021"
 publish = false
@@ -13,6 +13,6 @@ opencv = "0.66"
 anyhow = "1.0.62"
 
 [lib]
-name = "fetlife_opencv"
+name = "libfacedetection"
 crate-type = ["cdylib"]
 
