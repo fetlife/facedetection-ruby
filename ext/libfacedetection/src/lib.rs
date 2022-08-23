@@ -29,10 +29,10 @@ fn detect_haar_cascade(content: Vec<u8>) -> Result<Array> {
     let mut result = Array::new();
     for face in faces {
       let mut array = Array::new();
-      array.push(Fixnum::new((face.x as f32 * 0.9) as i64));
-      array.push(Fixnum::new((face.y as f32 * 0.9) as i64));
-      array.push(Fixnum::new((face.width as f32 * 1.25) as i64));
-      array.push(Fixnum::new((face.height as f32 * 1.6) as i64));
+      array.push(Fixnum::new(face.x as i64));
+      array.push(Fixnum::new(face.y as i64));
+      array.push(Fixnum::new(face.width as i64));
+      array.push(Fixnum::new(face.height as i64));
       result.push(array);
     }
     Ok(result)
