@@ -19,7 +19,7 @@ use opencv::{
 fn do_detection(content: RString) -> Result<Array> {
   let content = content.to_vec_u8_unchecked();
   let cascade_file_path = env::var("CASCADE_XML_FILE").context("CASCADE_XML_FILE not set")?;
-  let mut classifier = objdetect::CascadeClassifier::new(cascade_file_path).context("Unable to open cascade xml file")?;
+  let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path).context("Unable to open cascade xml file")?;
   let img = imgcodecs::imdecode(&types::VectorOfu8::from(content) , imgproc::COLOR_BGR2GRAY).context("Unable to decode image")?;
   let mut faces = types::VectorOfRect::new();
   classifier.detect_multi_scale(
