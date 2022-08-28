@@ -22,7 +22,7 @@ fn detect_haar_cascade(content: Vec<u8>) -> Result<Array> {
             1.1,
             10,
             objdetect::CASCADE_SCALE_IMAGE,
-            Size::new(100, 100),
+            Size::new(30, 30),
             Size::new(500, 500),
         )
         .context("Failed to run detect_multi_scale")?;
