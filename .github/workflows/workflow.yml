@@ -1,0 +1,16 @@
+name: run-tests
+on: [push]
+jobs:
+  build_gem:
+    name: Build and test ruby extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: 3.1.0
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: gem build libfacedetection.gemspec
+      - run: gem install libfacedetection.gem
