@@ -12,6 +12,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: sudo apt-get update && sudo apt-get install -y opencv-dev
+      - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
       - run: gem build libfacedetection.gemspec
       - run: gem install $(ls -1 *.gem)
