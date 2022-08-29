@@ -13,4 +13,4 @@ jobs:
         with:
           toolchain: stable
       - run: gem build libfacedetection.gemspec
-      - run: gem install libfacedetection.gem
+      - run: gem install $(ls -1 *.gem)
