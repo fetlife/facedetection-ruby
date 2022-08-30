@@ -1,9 +1,7 @@
-use std::mem;
-
 use anyhow::{bail, Context, Result};
 use rutie::{methods, module};
 
-use rutie::{Array, Class, Fixnum, Hash, Module, Object, RString, VM, Symbol};
+use rutie::{Array, Class, Fixnum, Hash, Module, Object, RString, Symbol, VM};
 
 #[cfg(feature = "opencv")]
 fn detect_opencv(content: Vec<u8>) -> Result<Array> {
@@ -13,7 +11,7 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
         opencv::core::find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false)?;
     let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path)
         .context("Unable to open cascade xml file")?;
-    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgcodecs::IMREAD_COLOR)
+    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgproc::COLOR_BGR2GRAY)
         .context("Unable to decode image")?;
     let mut faces = types::VectorOfRect::new();
     classifier
@@ -45,7 +43,7 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
 fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
     use opencv::{imgcodecs, prelude::*, types};
 
-    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), 0)
+    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgcodecs::IMREAD_COLOR)
         .context("Unable to decode image")?;
     detect_libfacedetection_data(
         img.ptr(0)?,
@@ -76,7 +74,7 @@ fn detect_libfacedetection_data(
         bgrdata,
         width,
         height,
-        step.unwrap_or_else(|| (width * 3) as u32), // calculate step without padding
+        step.unwrap_or((width * 3) as u32), // calculate step without padding
     )?;
     let mut result = Array::new();
     for face in facedetect_result.faces {
@@ -86,7 +84,10 @@ fn detect_libfacedetection_data(
         hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
         hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
         hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
-        hash.store(Symbol::new("confidence"), Fixnum::new(face.confidence as i64));
+        hash.store(
+            Symbol::new("confidence"),
+            Fixnum::new(face.confidence as i64),
+        );
         for landmark in face.landmarks {
             let mut a = Array::new();
             a.push(Fixnum::new(landmark.0 as i64));
@@ -144,7 +145,11 @@ methods!(
         }
     }
 
-    fn pub_detect_libfacedetection_image_data(data_ptr: Fixnum, width: Fixnum, height: Fixnum) -> Array {
+    fn pub_detect_libfacedetection_image_data(
+        data_ptr: Fixnum,
+        width: Fixnum,
+        height: Fixnum
+    ) -> Array {
         let (data_ptr, width, height) = match (data_ptr, width, height) {
             (Ok(data_ptr), Ok(width), Ok(height)) => (data_ptr, width, height),
             _ => {
@@ -155,14 +160,12 @@ methods!(
                 unreachable!()
             }
         };
-        match unsafe {
-            detect_libfacedetection_data(
-                mem::transmute(data_ptr.to_u64()),
-                width.to_i32(),
-                height.to_i32(),
-                None,
-            )
-        } {
+        match detect_libfacedetection_data(
+            data_ptr.to_u64() as *const u8,
+            width.to_i32(),
+            height.to_i32(),
+            None,
+        ) {
             Ok(faces) => faces,
             Err(e) => {
                 VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
@@ -195,9 +198,6 @@ pub extern "C" fn Init_libfacedetection() {
             "detect_libfacedetection_image_data",
             pub_detect_libfacedetection_image_data,
         );
-        klass.def_self(
-            "features",
-            features,
-        );
+        klass.def_self("features", features);
     });
 }
