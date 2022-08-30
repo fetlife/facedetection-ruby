@@ -11,15 +11,17 @@ create_rust_makefile("libfacedetection/libfacedetection") do |r|
   # r.features = ["test-feature"]
 
   # You can add whatever env vars you want to the env hash (optional)
-  r.env = {"FOO" => "BAR"}
+  #r.env = {"FOO" => "BAR"}
 
   # If your Cargo.toml is in a different directory, you can specify it here (optional)
   r.ext_dir = "."
 
   # Extra flags to pass to the $RUSTFLAGS environment variable (optional)
-  r.extra_rustflags = ["--cfg=some_nested_config_var_for_crate"]
+  #r.extra_rustflags = ["--cfg=some_nested_config_var_for_crate"]
 
   # Force a rust toolchain to be installed via rustup (optional)
   # You can also set the env var `RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN=true`
   r.force_install_rust_toolchain = false
+  # Clean up the target/ dir after `gem install` to reduce bloat (optional)
+  r.clean_after_install = false
 end
