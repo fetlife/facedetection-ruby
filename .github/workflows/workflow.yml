@@ -9,9 +9,6 @@ jobs:
       - uses: ruby/setup-ruby-pkgs@v1
         with:
           ruby-version: 3.1.0
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
       - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
       - run: gem build libfacedetection.gemspec
       - run: gem install $(ls -1 *.gem)

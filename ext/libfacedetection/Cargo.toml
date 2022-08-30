@@ -8,11 +8,14 @@ authors = ["Fetlife <dev@fetlife.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rutie = { version="0.8.4", features = ["no-link"] }
-opencv = "0.66"
 anyhow = "1.0.62"
+libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true }
+opencv = { version = "0.66", optional = true }
+rutie = { version="0.8.4", features = ["no-link"] }
 
 [lib]
 name = "libfacedetection"
 crate-type = ["cdylib"]
 
+[features]
+default = ["libfacedetection"]
