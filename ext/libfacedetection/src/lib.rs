@@ -27,14 +27,16 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
             Size::new(500, 500),
         )
         .context("Failed to run detect_multi_scale")?;
+
     let mut result = Array::new();
-    for face in faces {
-        let mut array = Array::new();
-        array.push(Fixnum::new(face.x as i64));
-        array.push(Fixnum::new(face.y as i64));
-        array.push(Fixnum::new(face.width as i64));
-        array.push(Fixnum::new(face.height as i64));
-        result.push(array);
+    for face in facedetect_result.faces {
+        let mut hash = Hash::new();
+        let mut landmarks = Array::new();
+        hash.store(Symbol::new("x"), Fixnum::new(face.x as i64));
+        hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
+        hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
+        hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
+        result.push(hash);
     }
     Ok(result)
 }
