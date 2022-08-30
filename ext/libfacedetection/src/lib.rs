@@ -170,6 +170,19 @@ methods!(
             }
         }
     }
+
+    fn features() -> Array {
+        let mut result = Array::new();
+        #[cfg(feature = "libfacedetection")]
+        {
+            result.push(Symbol::new("libfacedetection"));
+        }
+        #[cfg(feature = "opencv")]
+        {
+            result.push(Symbol::new("opencv"));
+        }
+        result
+    }
 );
 
 #[allow(non_snake_case)]
@@ -181,6 +194,10 @@ pub extern "C" fn Init_libfacedetection() {
         klass.def_self(
             "detect_libfacedetection_image_data",
             pub_detect_libfacedetection_image_data,
+        );
+        klass.def_self(
+            "features",
+            features,
         );
     });
 }
