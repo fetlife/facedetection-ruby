@@ -13,7 +13,7 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
         opencv::core::find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false)?;
     let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path)
         .context("Unable to open cascade xml file")?;
-    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgproc::COLOR_BGR2GRAY)
+    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgcodecs::IMREAD_COLOR)
         .context("Unable to decode image")?;
     let mut faces = types::VectorOfRect::new();
     classifier
