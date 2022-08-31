@@ -8,7 +8,7 @@ create_rust_makefile("libfacedetection/libfacedetection") do |r|
   r.profile = ENV.fetch("RB_SYS_CARGO_PROFILE", :release).to_sym
 
   # Can be overridden with `RB_SYS_CARGO_FEATURES` env var (optional)
-  # r.features = ["test-feature"]
+  r.features = ENV.fetch("RB_SYS_CARGO_FEATURES", "libfacedetection").split(",")
 
   # You can add whatever env vars you want to the env hash (optional)
   #r.env = {"FOO" => "BAR"}

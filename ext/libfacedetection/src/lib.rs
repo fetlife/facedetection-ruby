@@ -1,9 +1,7 @@
-use std::mem;
-
 use anyhow::{bail, Context, Result};
 use rutie::{methods, module};
 
-use rutie::{Array, Class, Fixnum, Module, Object, RString, VM};
+use rutie::{Array, Class, Fixnum, Hash, Module, Object, RString, Symbol, VM};
 
 #[cfg(feature = "opencv")]
 fn detect_opencv(content: Vec<u8>) -> Result<Array> {
@@ -27,14 +25,16 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
             Size::new(500, 500),
         )
         .context("Failed to run detect_multi_scale")?;
+
     let mut result = Array::new();
     for face in faces {
-        let mut array = Array::new();
-        array.push(Fixnum::new(face.x as i64));
-        array.push(Fixnum::new(face.y as i64));
-        array.push(Fixnum::new(face.width as i64));
-        array.push(Fixnum::new(face.height as i64));
-        result.push(array);
+        let mut hash = Hash::new();
+        let mut landmarks = Array::new();
+        hash.store(Symbol::new("x"), Fixnum::new(face.x as i64));
+        hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
+        hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
+        hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
+        result.push(hash);
     }
     Ok(result)
 }
@@ -43,7 +43,7 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
 fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
     use opencv::{imgcodecs, prelude::*, types};
 
-    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), 0)
+    let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgcodecs::IMREAD_COLOR)
         .context("Unable to decode image")?;
     detect_libfacedetection_data(
         img.ptr(0)?,
@@ -54,36 +54,48 @@ fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
 }
 
 #[cfg(not(feature = "opencv"))]
-fn detect_opencv(content: Vec<u8>) -> Result<Array> {
+fn detect_opencv(_content: Vec<u8>) -> Result<Array> {
     bail!("OpenCV is not enabled");
 }
 
 #[cfg(not(all(feature = "libfacedetection", feature = "opencv")))]
-fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
+fn detect_libfacedetection(_content: Vec<u8>) -> Result<Array> {
     bail!("need to have both libfacedetection and OpenCV enabled");
 }
 
 #[cfg(feature = "libfacedetection")]
 fn detect_libfacedetection_data(
-    brgdata: *const u8,
+    bgrdata: *const u8,
     width: i32,
     height: i32,
     step: Option<u32>,
 ) -> Result<Array> {
     let facedetect_result = libfacedetection::facedetect_cnn(
-        brgdata,
+        bgrdata,
         width,
         height,
-        step.unwrap_or_else(|| (width * 3) as u32), // calculate step without padding
+        step.unwrap_or((width * 3) as u32), // calculate step without padding
     )?;
     let mut result = Array::new();
     for face in facedetect_result.faces {
-        let mut array = Array::new();
-        array.push(Fixnum::new(face.x as i64));
-        array.push(Fixnum::new(face.y as i64));
-        array.push(Fixnum::new(face.width as i64));
-        array.push(Fixnum::new(face.height as i64));
-        result.push(array);
+        let mut hash = Hash::new();
+        let mut landmarks = Array::new();
+        hash.store(Symbol::new("x"), Fixnum::new(face.x as i64));
+        hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
+        hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
+        hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
+        hash.store(
+            Symbol::new("confidence"),
+            Fixnum::new(face.confidence as i64),
+        );
+        for landmark in face.landmarks {
+            let mut a = Array::new();
+            a.push(Fixnum::new(landmark.0 as i64));
+            a.push(Fixnum::new(landmark.1 as i64));
+            landmarks.push(a);
+        }
+        hash.store(Symbol::new("landmarks"), landmarks);
+        result.push(hash);
     }
     Ok(result)
 }
@@ -133,7 +145,11 @@ methods!(
         }
     }
 
-    fn pub_detect_libfacedetection_image_data(data_ptr: Fixnum, width: Fixnum, height: Fixnum) -> Array {
+    fn pub_detect_libfacedetection_image_data(
+        data_ptr: Fixnum,
+        width: Fixnum,
+        height: Fixnum
+    ) -> Array {
         let (data_ptr, width, height) = match (data_ptr, width, height) {
             (Ok(data_ptr), Ok(width), Ok(height)) => (data_ptr, width, height),
             _ => {
@@ -144,20 +160,31 @@ methods!(
                 unreachable!()
             }
         };
-        match unsafe {
-            detect_libfacedetection_data(
-                mem::transmute(data_ptr.to_u64()),
-                width.to_i32(),
-                height.to_i32(),
-                None,
-            )
-        } {
+        match detect_libfacedetection_data(
+            data_ptr.to_u64() as *const u8,
+            width.to_i32(),
+            height.to_i32(),
+            None,
+        ) {
             Ok(faces) => faces,
             Err(e) => {
                 VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
                 unreachable!()
             }
         }
+    }
+
+    fn features() -> Array {
+        let mut result = Array::new();
+        #[cfg(feature = "libfacedetection")]
+        {
+            result.push(Symbol::new("libfacedetection"));
+        }
+        #[cfg(feature = "opencv")]
+        {
+            result.push(Symbol::new("opencv"));
+        }
+        result
     }
 );
 
@@ -171,5 +198,6 @@ pub extern "C" fn Init_libfacedetection() {
             "detect_libfacedetection_image_data",
             pub_detect_libfacedetection_image_data,
         );
+        klass.def_self("features", features);
     });
 }
