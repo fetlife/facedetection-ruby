@@ -12,3 +12,42 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
       - run: gem build libfacedetection.gemspec
       - run: gem install $(ls -1 *.gem)
+  compile_native_gem:
+    name: Compile native gem
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - x86_64-linux
+          - aarch64-linux
+          - arm-linux
+          - x86_64-darwin
+          - arm64-darwin
+          - x64-mingw32
+          - x64-mingw-ucrt
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+
+      - uses: oxidize-rb/cross-gem-action@main
+        with:
+          platform: ${{ matrix.platform }}
+          version: '0.9.27' # optional
+          setup: | # optional
+            echo "Do something custom before compiling..."
+          env: | # optional
+            RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
+            SOME_OTHER_ENV=some_value
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: cross-gem
+          path: pkg/
+
+      - name: Display structure of built gems
+        run: ls -R
+        working-directory: pkg/
