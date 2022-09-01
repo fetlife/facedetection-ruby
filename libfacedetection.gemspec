@@ -22,6 +22,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions = ["ext/libfacedetection/extconf.rb"]
   spec.add_dependency "rb_sys", "~> 0.9"
+  spec.add_dev_dependency "rake", "~> 13.0"
+  spec.add_dev_dependency "rake-compiler", "~> 1.2.0"
 
 
   # Uncomment to register a new dependency of your gem
