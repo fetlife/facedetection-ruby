@@ -19,12 +19,9 @@ jobs:
       matrix:
         platform:
           - x86_64-linux
-          - aarch64-linux
-          - arm-linux
           - x86_64-darwin
           - arm64-darwin
-          - x64-mingw32
-          - x64-mingw-ucrt
+          - aarch64-linux
     steps:
       - uses: actions/checkout@v2
 
