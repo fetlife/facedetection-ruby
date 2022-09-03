@@ -34,7 +34,7 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           setup: | # optional
-            echo "Do something custom before compiling..."
+            sudo apt-get update && sudo apt-get install libstdc++-devel
           env: | # optional
             RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
 
