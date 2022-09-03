@@ -37,7 +37,6 @@ jobs:
             echo "Do something custom before compiling..."
           env: | # optional
             RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
-            SOME_OTHER_ENV=some_value
 
       - uses: actions/download-artifact@v3
         with:

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "lib/libfacedetection/version"
+$:.push File.expand_path("../lib", __FILE__)
+require "libfacedetection/version"
 
 Gem::Specification.new do |spec|
   spec.name = "libfacedetection"
@@ -24,7 +25,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rake-compiler", "~> 1.2.0"
+  spec.add_development_dependency "rake-compiler-dock", "~> 1.2.2"
 
+  spec.metadata = { "github_repo" => "ssh://github.com/fetlife/facedetection-ruby" }
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
