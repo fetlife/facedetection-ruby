@@ -35,10 +35,10 @@ jobs:
           platform: ${{ matrix.platform }}
           setup: | # optional
             env
-            sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get -qq install libstdc++-10-dev gcc-multilib g++-multilib
             bundle install
           env: | # optional
             RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
+            CXX_aarch64_unknown_linux_gnu=
 
       - uses: actions/download-artifact@v3
         with:
