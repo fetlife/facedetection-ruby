@@ -23,5 +23,5 @@ create_rust_makefile("libfacedetection/libfacedetection") do |r|
   # You can also set the env var `RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN=true`
   r.force_install_rust_toolchain = false
   # Clean up the target/ dir after `gem install` to reduce bloat (optional)
-  r.clean_after_install = true
+  r.clean_after_install = false # need to be false to fix rake-compiler
 end
