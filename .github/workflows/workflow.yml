@@ -12,39 +12,39 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
       - run: gem build libfacedetection.gemspec
       - run: gem install $(ls -1 *.gem)
-  compile_native_gem:
-    name: Compile native gem
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - x86_64-linux
-          - x86_64-darwin
-          - arm64-darwin
-          - aarch64-linux
-    steps:
-      - uses: actions/checkout@v2
+  # compile_native_gem:
+  #   name: Compile native gem
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - x86_64-linux
+  #         - x86_64-darwin
+  #         - arm64-darwin
+  #         - aarch64-linux
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-          bundler-cache: true
+  #     - uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: '3.1'
+  #         bundler-cache: true
 
-      - uses: oxidize-rb/cross-gem-action@main
-        with:
-          platform: ${{ matrix.platform }}
-          setup: | # optional
-            env
-            bundle install
-          env: | # optional
-            RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
-            CXX_aarch64_unknown_linux_gnu=
+  #     - uses: oxidize-rb/cross-gem-action@main
+  #       with:
+  #         platform: ${{ matrix.platform }}
+  #         setup: | # optional
+  #           env
+  #           bundle install
+  #         env: | # optional
+  #           RUBY_CC_VERSION=3.1.0:3.0.0:2.7.0
+  #           CXX_aarch64_unknown_linux_gnu=
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: cross-gem
-          path: pkg/
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: cross-gem
+  #         path: pkg/
 
-      - name: Display structure of built gems
-        run: ls -R
-        working-directory: pkg/
+  #     - name: Display structure of built gems
+  #       run: ls -R
+  #       working-directory: pkg/

@@ -18,14 +18,3 @@ Gem::PackageTask.new(spec) do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
 end
-
-namespace "gem" do
-  platforms.each do |platform|
-    namespace platform do
-      task "rcd" do
-        Rake::Task["native:#{platform}"].invoke
-        Rake::Task["pkg/#{spec.full_name}-#{Gem::Platform.new(platform)}.gem"].invoke
-      end
-    end
-  end
-end
