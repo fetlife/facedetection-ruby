@@ -9,7 +9,7 @@ authors = ["Fetlife <dev@fetlife.com>"]
 
 [dependencies]
 anyhow = "1.0.62"
-libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true, rev="fb20565063fa8017f096b9941bd4822d635bafaa" }
+libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true, rev="7426f33ba101514932a5ef58456761735c7bf3dc" }
 opencv = { version = "0.66", optional = true }
 rutie = { version="0.8.4", features = ["no-link"] }
 
