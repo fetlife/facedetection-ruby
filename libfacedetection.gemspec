@@ -15,6 +15,8 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.3.0"
 
+  spec.platform = Gem::Platform::RUBY
+
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir["lib/**/*.rb", "ext/**/*.{rs,toml,lock,rb}"]
