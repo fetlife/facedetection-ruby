@@ -14,7 +14,7 @@ opencv = { version = "0.66", optional = true }
 rutie = { version="0.8.4", features = ["no-link"] }
 
 [lib]
-name = "libfacedetection"
+name = "libfacedetection_ruby"
 crate-type = ["cdylib"]
 
 [features]
