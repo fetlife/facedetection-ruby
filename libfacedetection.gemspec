@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.extensions = ["Cargo.toml"]
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rake-compiler", "~> 1.2.0"
+  spec.required_rubygems_version = Gem::Requirement.new(">= 3.3.11") if spec.respond_to? :required_rubygems_version=
   # spec.add_development_dependency "rake-compiler-dock", "~> 1.2.2"
 
   spec.metadata = { "github_repo" => "ssh://github.com/fetlife/facedetection-ruby" }
