@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use rutie::{methods, module};
 
 use rutie::{Array, Class, Fixnum, Hash, Module, Object, RString, Symbol, VM};

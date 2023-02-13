@@ -10,6 +10,7 @@ jobs:
         with:
           ruby-version: 3.1.0
       - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
+      - run: gem update --system
       - run: gem build libfacedetection.gemspec
       - run: gem install $(ls -1 *.gem)
   # compile_native_gem:
