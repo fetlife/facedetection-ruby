@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions = ["Cargo.toml"]
   spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "rake-compiler", "~> 1.2.0"
+  spec.add_development_dependency "gem-compiler"
   spec.required_rubygems_version = Gem::Requirement.new(">= 3.4.0") if spec.respond_to? :required_rubygems_version=
   # spec.add_development_dependency "rake-compiler-dock", "~> 1.2.2"
 
