@@ -2,9 +2,9 @@ require_relative "libfacedetection/version"
 
 begin
   RUBY_VERSION =~ /(\d+\.\d+)/
-  require "libfacedetection/#{$1}/libfacedetection"
+  require "#{$1}/libfacedetection_ruby"
 rescue LoadError
-  require "libfacedetection/libfacedetection"
+  require "libfacedetection_ruby"
 end
 
 module Libfacedetection

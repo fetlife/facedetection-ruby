@@ -190,7 +190,7 @@ methods!(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "C" fn Init_libfacedetection() {
+pub extern "C" fn Init_libfacedetection_ruby() {
     Module::new("Libfacedetection").define(|klass| {
         klass.def_self("detect_opencv", pub_detect_opencv);
         klass.def_self("detect_libfacedetection", pub_detect_libfacedetection);
