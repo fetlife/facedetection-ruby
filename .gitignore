@@ -3,3 +3,5 @@
 *.bundle
 *.so
 /target
+Gemfile.lock
+.ruby-version
