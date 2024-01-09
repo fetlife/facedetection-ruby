@@ -8,7 +8,7 @@ gem_task = Gem::PackageTask.new(spec) do |pkg|
   pkg.need_tar = true
 end
 
-desc "Generate a pre-compiled native gem"
+desc "Generate a pre-compiled native gem for #{RUBY_PLATFORM}"
 task "gem:native" => ["gem"] do
   sh "gem compile #{gem_task.package_dir_path}.gem"
 end
