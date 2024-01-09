@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-$:.push File.expand_path("../lib", __FILE__)
+$:.push File.expand_path("lib", __dir__)
 require "libfacedetection/version"
 
 Gem::Specification.new do |spec|
