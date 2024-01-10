@@ -8,10 +8,9 @@ authors = ["Fetlife <dev@fetlife.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.62"
 libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true, rev="7426f33ba101514932a5ef58456761735c7bf3dc" }
-opencv = { version = "0.66", optional = true }
-rutie = { version="0.8.4", features = ["no-link"] }
+opencv = { version = "0.88.6", optional = true, features=["clang-runtime"] }
+magnus = { version="0.6.2" }
 
 [lib]
 name = "libfacedetection_ruby"

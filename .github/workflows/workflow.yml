@@ -9,10 +9,12 @@ jobs:
       - uses: ruby/setup-ruby-pkgs@v1
         with:
           ruby-version: 3.3.0
-      - run: sudo apt-get update && sudo apt-get install -y libopencv-dev
+      - run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
       - run: gem update --system
-      - run: gem build libfacedetection.gemspec
-      - run: gem install $(ls -1 *.gem)
+      - run: rake gem
+      - run: gem install $(ls -1 pkg/*.gem)
+      - run: bundle install
+      - run: ruby tests/test_detection.rb
   # compile_native_gem:
   #   name: Compile native gem
   #   runs-on: ubuntu-latest

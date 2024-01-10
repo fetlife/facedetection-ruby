@@ -1,18 +1,25 @@
-use anyhow::{bail, Result};
-use rutie::{methods, module};
-
-use rutie::{Array, Class, Fixnum, Hash, Module, Object, RString, Symbol, VM};
+use magnus::{error::Result, exception, Error, Integer, Module, RArray, RHash, Symbol};
 
 #[cfg(feature = "opencv")]
-fn detect_opencv(content: Vec<u8>) -> Result<Array> {
+fn detect_opencv(content: Vec<u8>) -> Result<RArray> {
     use opencv::{core::Size, imgcodecs, imgproc, objdetect, prelude::*, types};
 
     let cascade_file_path =
-        opencv::core::find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false)?;
-    let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path)
-        .context("Unable to open cascade xml file")?;
+        opencv::core::find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false)
+            .map_err(|e| Error::new(exception::runtime_error(), e.to_string()))?;
+    let mut classifier = objdetect::CascadeClassifier::new(&cascade_file_path).map_err(|e| {
+        Error::new(
+            exception::runtime_error(),
+            format!("failed creating classifier: {}", e),
+        )
+    })?;
     let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgproc::COLOR_BGR2GRAY)
-        .context("Unable to decode image")?;
+        .map_err(|e| {
+            Error::new(
+                exception::runtime_error(),
+                format!("failed decoding image: {}", e),
+            )
+        })?;
     let mut faces = types::VectorOfRect::new();
     classifier
         .detect_multi_scale(
@@ -24,29 +31,44 @@ fn detect_opencv(content: Vec<u8>) -> Result<Array> {
             Size::new(30, 30),
             Size::new(500, 500),
         )
-        .context("Failed to run detect_multi_scale")?;
+        .map_err(|e| {
+            Error::new(
+                exception::runtime_error(),
+                format!("Failed to run detect_multi_scale: {}", e),
+            )
+        })?;
 
-    let mut result = Array::new();
+    let result = RArray::new();
     for face in faces {
-        let mut hash = Hash::new();
-        let mut landmarks = Array::new();
-        hash.store(Symbol::new("x"), Fixnum::new(face.x as i64));
-        hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
-        hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
-        hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
-        result.push(hash);
+        let hash = RHash::new();
+        // let landmarks = RArray::new();
+        hash.aset(Symbol::new("x"), Integer::from_i64(face.x as i64))?;
+        hash.aset(Symbol::new("y"), Integer::from_i64(face.y as i64))?;
+        hash.aset(Symbol::new("width"), Integer::from_i64(face.width as i64))?;
+        hash.aset(Symbol::new("height"), Integer::from_i64(face.height as i64))?;
+        result.push(hash)?;
     }
     Ok(result)
 }
 
 #[cfg(all(feature = "libfacedetection", feature = "opencv"))]
-fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
+fn detect_libfacedetection(content: Vec<u8>) -> Result<RArray> {
     use opencv::{imgcodecs, prelude::*, types};
 
     let img = imgcodecs::imdecode(&types::VectorOfu8::from(content), imgcodecs::IMREAD_COLOR)
-        .context("Unable to decode image")?;
+        .map_err(|e| {
+            Error::new(
+                exception::runtime_error(),
+                format!("unable to decode image: {}", e),
+            )
+        })?;
     detect_libfacedetection_data(
-        img.ptr(0)?,
+        img.ptr(0).map_err(|e| {
+            Error::new(
+                exception::runtime_error(),
+                format!("unable to read image data: {}", e),
+            )
+        })?,
         img.cols(),
         img.rows(),
         Some(img.mat_step().get(0) as u32),
@@ -54,13 +76,19 @@ fn detect_libfacedetection(content: Vec<u8>) -> Result<Array> {
 }
 
 #[cfg(not(feature = "opencv"))]
-fn detect_opencv(_content: Vec<u8>) -> Result<Array> {
-    bail!("OpenCV is not enabled");
+fn detect_opencv(_content: Vec<u8>) -> Result<RArray> {
+    Err(Error::new(
+        exception::runtime_error(),
+        "OpenCV is not enabled",
+    ))
 }
 
 #[cfg(not(all(feature = "libfacedetection", feature = "opencv")))]
-fn detect_libfacedetection(_content: Vec<u8>) -> Result<Array> {
-    bail!("need to have both libfacedetection and OpenCV enabled");
+fn detect_libfacedetection(_content: Vec<u8>) -> Result<RArray> {
+    Err(Error::new(
+        exception::runtime_error(),
+        "need to have both libfacedetection and OpenCV enabled",
+    ))
 }
 
 #[cfg(feature = "libfacedetection")]
@@ -69,135 +97,84 @@ fn detect_libfacedetection_data(
     width: i32,
     height: i32,
     step: Option<u32>,
-) -> Result<Array> {
+) -> Result<RArray> {
     let facedetect_result = libfacedetection::facedetect_cnn(
         bgrdata,
         width,
         height,
         step.unwrap_or((width * 3) as u32), // calculate step without padding
-    )?;
-    let mut result = Array::new();
+    )
+    .map_err(|e| {
+        Error::new(
+            exception::runtime_error(),
+            format!("libfacedetection error: {}", e),
+        )
+    })?;
+    let result = RArray::new();
     for face in facedetect_result.faces {
-        let mut hash = Hash::new();
-        let mut landmarks = Array::new();
-        hash.store(Symbol::new("x"), Fixnum::new(face.x as i64));
-        hash.store(Symbol::new("y"), Fixnum::new(face.y as i64));
-        hash.store(Symbol::new("width"), Fixnum::new(face.width as i64));
-        hash.store(Symbol::new("height"), Fixnum::new(face.height as i64));
-        hash.store(
+        let hash = RHash::new();
+        let landmarks = RArray::new();
+        hash.aset(Symbol::new("x"), Integer::from_i64(face.x as i64))?;
+        hash.aset(Symbol::new("y"), Integer::from_i64(face.y as i64))?;
+        hash.aset(Symbol::new("width"), Integer::from_i64(face.width as i64))?;
+        hash.aset(Symbol::new("height"), Integer::from_i64(face.height as i64))?;
+        hash.aset(
             Symbol::new("confidence"),
-            Fixnum::new(face.confidence as i64),
-        );
+            Integer::from_i64(face.confidence as i64),
+        )?;
         for landmark in face.landmarks {
-            let mut a = Array::new();
-            a.push(Fixnum::new(landmark.0 as i64));
-            a.push(Fixnum::new(landmark.1 as i64));
-            landmarks.push(a);
+            let a = RArray::new();
+            a.push(Integer::from_i64(landmark.0 as i64))?;
+            a.push(Integer::from_i64(landmark.1 as i64))?;
+            landmarks.push(a)?;
         }
-        hash.store(Symbol::new("landmarks"), landmarks);
-        result.push(hash);
+        hash.aset(Symbol::new("landmarks"), landmarks)?;
+        result.push(hash)?;
     }
     Ok(result)
 }
 
-module!(Libfacedetection);
+fn pub_detect_opencv(content: String) -> Result<RArray> {
+    detect_opencv(content.into_bytes())
+}
 
-methods!(
-    Libfacedetection,
-    _rtself,
-    fn pub_detect_opencv(content: RString) -> Array {
-        let content = match content {
-            Ok(content) => content,
-            Err(_) => {
-                VM::raise(
-                    Class::from_existing("ArgumentError"),
-                    "Expected image content",
-                );
-                unreachable!()
-            }
-        };
-        match detect_opencv(content.to_vec_u8_unchecked()) {
-            Ok(faces) => faces,
-            Err(e) => {
-                VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
-                unreachable!()
-            }
-        }
+fn pub_detect_libfacedetection(content: String) -> Result<RArray> {
+    detect_libfacedetection(content.into_bytes())
+}
+
+fn pub_detect_libfacedetection_image_data(
+    data_ptr: usize,
+    width: usize,
+    height: usize,
+) -> Result<RArray> {
+    detect_libfacedetection_data(data_ptr as *const u8, width as i32, height as i32, None)
+}
+
+fn features() -> Result<RArray> {
+    let result = RArray::new();
+    #[cfg(feature = "libfacedetection")]
+    {
+        result.push(magnus::Symbol::new("libfacedetection"))?;
     }
-
-    fn pub_detect_libfacedetection(content: RString) -> Array {
-        let content = match content {
-            Ok(content) => content,
-            Err(_) => {
-                VM::raise(
-                    Class::from_existing("ArgumentError"),
-                    "Expected image content",
-                );
-                unreachable!()
-            }
-        };
-        match detect_libfacedetection(content.to_vec_u8_unchecked()) {
-            Ok(faces) => faces,
-            Err(e) => {
-                VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
-                unreachable!()
-            }
-        }
+    #[cfg(feature = "opencv")]
+    {
+        result.push(magnus::Symbol::new("opencv"))?;
     }
+    Ok(result)
+}
 
-    fn pub_detect_libfacedetection_image_data(
-        data_ptr: Fixnum,
-        width: Fixnum,
-        height: Fixnum
-    ) -> Array {
-        let (data_ptr, width, height) = match (data_ptr, width, height) {
-            (Ok(data_ptr), Ok(width), Ok(height)) => (data_ptr, width, height),
-            _ => {
-                VM::raise(
-                    Class::from_existing("ArgumentError"),
-                    "Provide data_ptr, width and height",
-                );
-                unreachable!()
-            }
-        };
-        match detect_libfacedetection_data(
-            data_ptr.to_u64() as *const u8,
-            width.to_i32(),
-            height.to_i32(),
-            None,
-        ) {
-            Ok(faces) => faces,
-            Err(e) => {
-                VM::raise(Class::from_existing("StandardError"), &format!("{e:#}"));
-                unreachable!()
-            }
-        }
-    }
-
-    fn features() -> Array {
-        let mut result = Array::new();
-        #[cfg(feature = "libfacedetection")]
-        {
-            result.push(Symbol::new("libfacedetection"));
-        }
-        #[cfg(feature = "opencv")]
-        {
-            result.push(Symbol::new("opencv"));
-        }
-        result
-    }
-);
-
-#[allow(non_snake_case)]
-#[no_mangle]
-pub extern "C" fn Init_libfacedetection_ruby() {
-    Module::new("Libfacedetection").define(|klass| {
-        klass.def_self("detect_opencv", pub_detect_opencv);
-        klass.def_self("detect_libfacedetection", pub_detect_libfacedetection);
-        klass.def_self(
-            "detect_libfacedetection_image_data",
-            pub_detect_libfacedetection_image_data,
-        );
-        klass.def_self("features", features);
-    });
+#[magnus::init]
+fn init(ruby: &magnus::Ruby) -> Result<()> {
+    let module = ruby.define_module("Libfacedetection")?;
+    module.define_module_function("detect_opencv", magnus::function!(pub_detect_opencv, 1))?;
+    module.define_module_function(
+        "detect_libfacedetection",
+        magnus::function!(pub_detect_libfacedetection, 1),
+    )?;
+    module.define_module_function(
+        "detect_libfacedetection_image_data",
+        magnus::function!(pub_detect_libfacedetection_image_data, 3),
+    )?;
+    module.define_module_function("features", magnus::function!(features, 0))?;
+    Ok(())
 }
