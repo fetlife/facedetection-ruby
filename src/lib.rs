@@ -165,16 +165,16 @@ fn features() -> Result<RArray> {
 
 #[magnus::init]
 fn init(ruby: &magnus::Ruby) -> Result<()> {
-    let class = ruby.define_class("Libfacedetection", ruby.class_object())?;
-    class.define_method("detect_opencv", magnus::function!(pub_detect_opencv, 1))?;
-    class.define_method(
+    let module = ruby.define_module("Libfacedetection")?;
+    module.define_module_function("detect_opencv", magnus::function!(pub_detect_opencv, 1))?;
+    module.define_module_function(
         "detect_libfacedetection",
         magnus::function!(pub_detect_libfacedetection, 1),
     )?;
-    class.define_method(
+    module.define_module_function(
         "detect_libfacedetection_image_data",
         magnus::function!(pub_detect_libfacedetection_image_data, 3),
     )?;
-    class.define_method("features", magnus::function!(features, 0))?;
+    module.define_module_function("features", magnus::function!(features, 0))?;
     Ok(())
 }
