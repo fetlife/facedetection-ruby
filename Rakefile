@@ -1,7 +1,7 @@
 require 'rubygems/package_task'
 
 spec = eval(File.read("libfacedetection.gemspec"))
-GEM_RUBY_VERSION = "3.3.0"
+GEM_RUBY_VERSION = "3.4.0"
 DOCKER_IMAGE = "ruby:#{GEM_RUBY_VERSION}-bullseye"
 
 def compile_cmd(_arch)
