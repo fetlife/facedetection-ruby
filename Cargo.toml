@@ -10,7 +10,7 @@ authors = ["Fetlife <dev@fetlife.com>"]
 [dependencies]
 libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true, rev="7426f33ba101514932a5ef58456761735c7bf3dc" }
 opencv = { version = "0.88.6", optional = true, features=["clang-runtime"] }
-magnus = { version="0.6.2" }
+magnus = { version="0.7.1" }
 
 [lib]
 name = "libfacedetection_ruby"

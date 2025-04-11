@@ -8,7 +8,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ruby/setup-ruby-pkgs@v1
         with:
-          ruby-version: 3.3.0
+          ruby-version: 3.4.0
       - run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
       - run: gem update --system
       - run: rake gem
