@@ -1,4 +1,4 @@
-use magnus::{error::Result, exception, Error, Integer, Module, RArray, RHash, Symbol};
+use magnus::{error::Result, exception, Error, Integer, RArray, RHash, Symbol};
 
 #[cfg(feature = "opencv")]
 fn detect_opencv(content: Vec<u8>) -> Result<RArray> {
