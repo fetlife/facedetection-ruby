@@ -1,0 +1,121 @@
+name: release
+on: push
+
+jobs:
+  build_gem:
+    name: Build source gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: 3.4.0
+      - run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
+      - run: gem update --system
+      - run: rake gem
+      - name: Upload source gem
+        uses: actions/upload-artifact@v3
+        with:
+          name: source-gem
+          path: pkg/*.gem
+          retention-days: 1
+
+  compile_native_gems:
+    name: Compile native gem
+    needs: build_gem
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: x86_64-linux
+            ruby: "3.4.0"
+          - os: ubuntu-latest
+            platform: aarch64-linux
+            ruby: "3.4.0"
+          - os: macos-latest
+            platform: arm64-darwin
+            ruby: "3.4.0"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install system dependencies on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
+
+      - name: Install system dependencies on macOS
+        if: matrix.os == 'macos-latest'
+        run: brew install opencv vips
+
+      - name: Install gem-compiler
+        run: gem install gem-compiler
+
+      - name: Download source gem
+        uses: actions/download-artifact@v3
+        with:
+          name: source-gem
+          path: pkg/
+
+      - name: Set up cross-compilation for aarch64-linux
+        if: matrix.platform == 'aarch64-linux'
+        run: |
+          sudo apt-get install -y qemu binfmt-support qemu-user-static
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Compile gem for x86_64-linux
+        if: matrix.platform == 'x86_64-linux'
+        run: |
+          SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin')
+          gem compile $SOURCE_GEM --prune
+
+      - name: Compile gem for arm64-darwin on macOS
+        if: matrix.platform == 'arm64-darwin'
+        run: |
+          SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin')
+          gem compile $SOURCE_GEM --prune
+
+      - name: Compile gem for aarch64-linux
+        if: matrix.platform == 'aarch64-linux'
+        uses: docker://multiarch/ubuntu-core:arm64-focal
+        with:
+          args: >
+            bash -c "
+            apt-get update && 
+            apt-get install -y ruby build-essential libopencv-dev libvips &&
+            gem install gem-compiler &&
+            cd /github/workspace &&
+            SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin') &&
+            gem compile $SOURCE_GEM --prune
+            "
+
+      - name: Upload compiled gem
+        uses: actions/upload-artifact@v3
+        with:
+          name: compiled-gems
+          path: ./*.gem
+          retention-days: 7
+
+  release:
+    name: Create GitHub Release
+    needs: compile_native_gems
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/source-gem/*.gem
+            artifacts/compiled-gems/*.gem
+          generate_release_notes: true
