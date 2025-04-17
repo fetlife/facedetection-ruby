@@ -26,10 +26,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-24.04-8core
+          - os: ubuntu-24.04
             platform: x86_64-linux
             ruby: "3.4"
-          - os: ubuntu-24.04-8core-arm64
+          - os: ubuntu-24.04-arm
             platform: aarch64-linux
             ruby: "3.4"
           - os: macos-latest
