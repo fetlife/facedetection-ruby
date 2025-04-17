@@ -16,7 +16,7 @@ jobs:
       - name: Upload source gem
         uses: actions/upload-artifact@v4
         with:
-          name: source-gem
+          name: libfacedetection.gem
           path: pkg/*.gem
           retention-days: 1
 
