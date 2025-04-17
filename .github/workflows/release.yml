@@ -29,9 +29,9 @@ jobs:
           - os: ubuntu-latest
             platform: x86_64-linux
             ruby: "3.4"
-          # - os: ubuntu-latest
-          #   platform: aarch64-linux
-          #   ruby: "3.4"
+          - os: ubuntu-latest-arm64
+            platform: aarch64-linux
+            ruby: "3.4"
           - os: macos-latest
             platform: arm64-darwin
             ruby: "3.4"
@@ -44,7 +44,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
 
       - name: Install system dependencies on Linux
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-latest-arm64'
         run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
 
       - name: Install system dependencies on macOS
@@ -60,37 +60,10 @@ jobs:
           name: source-gem
           path: pkg/
 
-      # - name: Set up cross-compilation for aarch64-linux
-      #   if: matrix.platform == 'aarch64-linux'
-      #   run: |
-      #     sudo apt-get install -y qemu binfmt-support qemu-user-static
-      #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
-      - name: Compile gem for x86_64-linux
-        if: matrix.platform == 'x86_64-linux'
+      - name: Compile gem
         run: |
           SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin')
           gem compile $SOURCE_GEM --prune
-
-      - name: Compile gem for arm64-darwin on macOS
-        if: matrix.platform == 'arm64-darwin'
-        run: |
-          SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin')
-          gem compile $SOURCE_GEM --prune
-
-      - name: Compile gem for aarch64-linux
-        if: matrix.platform == 'aarch64-linux'
-        uses: docker://multiarch/ubuntu-core:arm64-focal
-        with:
-          args: >
-            bash -c "
-            apt-get update && 
-            apt-get install -y ruby build-essential libopencv-dev libvips &&
-            gem install gem-compiler &&
-            cd /github/workspace &&
-            SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin') &&
-            gem compile $SOURCE_GEM --prune
-            "
 
       - name: Upload compiled gem
         uses: actions/upload-artifact@v4
@@ -115,6 +88,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/source-gem/*.gem
-            artifacts/compiled-gems/*.gem
+            artifacts/**/*.gem
           generate_release_notes: true
