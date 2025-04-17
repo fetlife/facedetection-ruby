@@ -26,10 +26,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-8core
             platform: x86_64-linux
             ruby: "3.4"
-          - os: ubuntu-latest-arm64
+          - os: ubuntu-24.04-8core-arm64
             platform: aarch64-linux
             ruby: "3.4"
           - os: macos-latest
@@ -57,7 +57,7 @@ jobs:
       - name: Download source gem
         uses: actions/download-artifact@v4
         with:
-          name: source-gem
+          name: libfacedetection.gem
           path: pkg/
 
       - name: Compile gem
@@ -68,7 +68,7 @@ jobs:
       - name: Upload compiled gem
         uses: actions/upload-artifact@v4
         with:
-          name: libfacedetection-${{ matrix.platform }}
+          name: libfacedetection-${{ matrix.platform }}.gem
           path: ./*.gem
           retention-days: 7
 
