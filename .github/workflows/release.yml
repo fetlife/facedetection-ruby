@@ -101,7 +101,7 @@ jobs:
             mv "$gem" "release_gems/libfacedetection-${platform}-${GEM_VERSION}.gem"
           done
           # Move source gem to release_gems directory
-          mv artifacts/libfacedetection.gem/*.gem release_gems/
+          mv artifacts/libfacedetection.gem/*.gem release_gems/libfacedetection-${GEM_VERSION}.gem
 
           # List all files in release_gems for verification
           echo "Files prepared for release:"
