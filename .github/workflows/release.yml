@@ -1,0 +1,115 @@
+name: release
+on:
+  push:
+    tags:
+      - "[0-9]*.[0-9]*.[0-9]*"
+
+jobs:
+  build_gem:
+    name: Build source gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: 3.4
+      - run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
+      - run: gem update --system
+      - run: rake gem
+      - name: Upload source gem
+        uses: actions/upload-artifact@v4
+        with:
+          name: libfacedetection.gem
+          path: pkg/*.gem
+          retention-days: 1
+
+  compile_native_gems:
+    name: Compile native gem
+    needs: build_gem
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: x86_64-linux
+            ruby: "3.4"
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux
+            ruby: "3.4"
+          - os: macos-latest
+            platform: arm64-darwin
+            ruby: "3.4"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install system dependencies on Linux
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-latest-arm64'
+        run: sudo apt-get update && sudo apt-get install -y libopencv-dev libvips
+
+      - name: Install system dependencies on macOS
+        if: matrix.os == 'macos-latest'
+        run: brew install opencv vips
+
+      - name: Install gem-compiler
+        run: gem install gem-compiler
+
+      - name: Download source gem
+        uses: actions/download-artifact@v4
+        with:
+          name: libfacedetection.gem
+          path: pkg/
+
+      - name: Compile gem
+        run: |
+          SOURCE_GEM=$(ls pkg/*.gem | grep -v -- '-x86_64-linux\|aarch64-linux\|arm64-darwin')
+          gem compile $SOURCE_GEM --prune
+
+      - name: Upload compiled gem
+        uses: actions/upload-artifact@v4
+        with:
+          name: libfacedetection-${{ matrix.platform }}.gem
+          path: ./*.gem
+          retention-days: 1
+
+  release:
+    name: Create GitHub Release
+    needs: compile_native_gems
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "GEM_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename gem files with version
+        run: |
+          mkdir -p release_gems
+          for gem in artifacts/libfacedetection-*.gem/*.gem; do
+            platform=$(basename $gem | sed -E 's/libfacedetection-([^.]+)\.gem/\1/')
+            mv "$gem" "release_gems/libfacedetection-${platform}-${GEM_VERSION}.gem"
+          done
+          # Move source gem to release_gems directory
+          mv artifacts/libfacedetection.gem/*.gem release_gems/libfacedetection-${GEM_VERSION}.gem
+
+          # List all files in release_gems for verification
+          echo "Files prepared for release:"
+          ls -la release_gems/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.GEM_VERSION }}
+          files: release_gems/*.gem
+          generate_release_notes: true
