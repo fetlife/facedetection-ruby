@@ -98,14 +98,14 @@ jobs:
           mkdir -p release_gems
           for gem in artifacts/libfacedetection-*.gem/*.gem; do
             platform=$(basename $gem | sed -E 's/libfacedetection-([^.]+)\.gem/\1/')
-            mv "$gem" "release_gems/libfacedetection-${platform}-${GEM_VERSION}.gem"
+
+            # Construct the target filename: NAME-VERSION-PLATFORM.gem
+            target_filename="libfacedetection-${GEM_VERSION}-${platform}.gem"
+            target_path="release_gems/$target_filename"
+            mv "$gem" "$target_path"
           done
           # Move source gem to release_gems directory
           mv artifacts/libfacedetection.gem/*.gem release_gems/libfacedetection-${GEM_VERSION}.gem
-
-          # List all files in release_gems for verification
-          echo "Files prepared for release:"
-          ls -la release_gems/
 
       - name: Create release
         uses: softprops/action-gh-release@v2
