@@ -97,7 +97,7 @@ jobs:
         run: |
           mkdir -p release_gems
           for gem in artifacts/libfacedetection-*.gem/*.gem; do
-            platform=$(basename $gem | sed -E 's/libfacedetection-([^.]+)\.gem/\1/')
+            platform=$(basename $gem | sed -E 's/libfacedetection-([^-]+-[^-]+)\.gem/\1/')
 
             # Construct the target filename: NAME-VERSION-PLATFORM.gem
             target_filename="libfacedetection-${GEM_VERSION}-${platform}.gem"
