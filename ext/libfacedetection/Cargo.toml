@@ -1,0 +1,19 @@
+[package]
+name = "libfacedetection-ruby"
+version = "0.0.1"
+edition = "2021"
+publish = false
+authors = ["Fetlife <dev@fetlife.com>"]
+
+[lib]
+name = "libfacedetection_ruby"
+crate-type = ["cdylib"]
+
+[dependencies]
+libfacedetection = { git = "https://github.com/fetlife/libfacedetection-rs.git", optional = true, rev = "7426f33ba101514932a5ef58456761735c7bf3dc" }
+opencv = { version = "0.88.6", optional = true, features = ["clang-runtime"] }
+magnus = { version = "0.8.2" }
+rb-sys = { version = "0.9.126", default-features = false, features = ["stable-api-compiled-fallback"] }
+
+[features]
+default = ["libfacedetection"]

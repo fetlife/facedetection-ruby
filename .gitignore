@@ -1,8 +1,16 @@
 /tmp
 /pkg
 *.bundle
+*.bundle.dSYM
 *.so
+*.dylib
+*.dll
 /target
+ext/**/target
+ext/**/Makefile
+ext/**/mkmf.log
+ext/**/.rb-sys
 Gemfile.lock
 .ruby-version
 *.gem
+
