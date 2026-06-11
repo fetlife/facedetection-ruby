@@ -184,7 +184,7 @@ fn features(ruby: &Ruby) -> Result<RArray> {
 }
 
 #[magnus::init]
-fn init(ruby: &magnus::Ruby) -> Result<()> {
+fn init(ruby: &Ruby) -> Result<()> {
     let module = ruby.define_module("Libfacedetection")?;
     module.define_module_function("detect_opencv", magnus::function!(pub_detect_opencv, 1))?;
     module.define_module_function(

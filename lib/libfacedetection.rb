@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "libfacedetection/version"
 
 module Libfacedetection
@@ -12,22 +14,26 @@ module Libfacedetection
   end
 end
 
-begin
-  [
-    "libfacedetection/#{Libfacedetection::RUBY_API_VERSION}/libfacedetection",
-    "libfacedetection/libfacedetection",
-    "../ext/libfacedetection/libfacedetection"
-  ].each do |path|
-    begin
-      require_relative path
-      Libfacedetection.instance_variable_set(:@available, true)
-      break
-    rescue LoadError
-      next
-    end
-  end
+[
+  "libfacedetection/#{Libfacedetection::RUBY_API_VERSION}/libfacedetection",
+  "libfacedetection/libfacedetection",
+  "../ext/libfacedetection/libfacedetection",
+].each do |path|
+  require_relative path
+  Libfacedetection.instance_variable_set(:@available, true)
+  break
 rescue LoadError
-  Libfacedetection.instance_variable_set(:@available, false)
+  next
+end
+
+unless Libfacedetection.available?
+  begin
+    extension_dir = Gem.loaded_specs["libfacedetection"]&.extension_dir if defined?(Gem)
+    require File.join(extension_dir, "libfacedetection") if extension_dir
+    Libfacedetection.instance_variable_set(:@available, true)
+  rescue LoadError
+    nil
+  end
 end
 
 Libfacedetection.instance_variable_set(:@available, false) unless Libfacedetection.available?

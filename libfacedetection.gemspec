@@ -22,6 +22,8 @@ Gem::Specification.new do |spec|
     "Cargo.lock",
     "lib/**/*.rb",
     "ext/**/*",
+    "extconf.rb",
+    "src/**/*.rs",
     "*.gemspec",
     "README.md",
   ].reject do |path|
