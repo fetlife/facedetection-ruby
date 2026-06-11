@@ -1,29 +1,78 @@
-require 'rubygems/package_task'
+# frozen_string_literal: true
 
-spec = eval(File.read("libfacedetection.gemspec"))
-GEM_RUBY_VERSION = "3.4.0"
-DOCKER_IMAGE = "ruby:#{GEM_RUBY_VERSION}-bullseye"
-
-def compile_cmd(_arch)
-  "gem instal gem-compiler; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source '/root/.cargo/env'; rake gem:native"
+begin
+  require "bundler/setup"
+  require "bundler/gem_tasks"
+rescue LoadError
+  # Allow plain Ruby environments to use already-installed gems.
 end
 
-gem_task = Gem::PackageTask.new(spec) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
+require "rb_sys/extensiontask"
+require "shellwords"
+
+GEMSPEC = Gem::Specification.load(File.expand_path("libfacedetection.gemspec", __dir__))
+CROSS_PLATFORMS = %w[
+  x86_64-linux
+  aarch64-linux
+  x86_64-darwin
+  arm64-darwin
+].freeze
+
+RbSys::ExtensionTask.new("libfacedetection", GEMSPEC) do |ext|
+  ext.lib_dir = "lib/libfacedetection"
+  ext.cross_compile = true
+  requested_platforms = [ENV["RUBY_TARGET"]].compact
+  ext.cross_platform = requested_platforms.empty? ? CROSS_PLATFORMS : requested_platforms
 end
 
-desc "Generate a pre-compiled native gem for #{RUBY_PLATFORM}"
-task "gem:native" => ["gem"] do
-  sh "gem compile #{gem_task.package_dir_path}.gem"
+def normalize_platforms(value)
+  Array(value)
+    .flat_map { |entry| entry.to_s.split(",") }
+    .map(&:strip)
+    .reject(&:empty?)
 end
 
-desc "Generate a pre-compiled native gem for aarch64-linux"
-task "gem:native:aarch64-linux" => ["gem"] do
-  sh %{docker run --rm --platform linux/arm64 -v $(pwd):/src -w /src #{DOCKER_IMAGE} /bin/bash -c "#{compile_cmd('aarch64-unknown-linux-musl')}"}
+def resolve_platforms(args)
+  requested = normalize_platforms(args.to_a + [ENV["PLATFORMS"], ENV["TARGET"]])
+  platforms = requested.empty? ? CROSS_PLATFORMS : requested
+  invalid_platforms = platforms - CROSS_PLATFORMS
+
+  return platforms if invalid_platforms.empty?
+
+  abort "Unsupported platform(s): #{invalid_platforms.join(', ')}. Supported: #{CROSS_PLATFORMS.join(', ')}"
 end
 
-desc "Generate a pre-compiled native gem for x86_64-linux"
-task "gem:native:x86_64-linux" => ["gem"] do
-  sh %{docker run --rm --platform linux/amd64 -v $(pwd):/src -w /src #{DOCKER_IMAGE} /bin/bash -c "#{compile_cmd('x86_64-unknown-linux-musl')}"}
+def run_rb_sys_dock!(platform)
+  command = ["rb-sys-dock", "--platform", platform, "--build"]
+
+  puts "==> #{command.shelljoin}"
+  sh(*command)
+  return if $?.success?
+
+  abort "rb-sys-dock build failed for #{platform}"
+end
+
+namespace :dock do
+  namespace :build do
+    desc "Cross-compile the native gem for all configured platforms via rb-sys-dock"
+    task :all do
+      CROSS_PLATFORMS.each { |platform| run_rb_sys_dock!(platform) }
+    end
+
+    desc "Cross-compile the native gem via rb-sys-dock. Use TARGET=platform or PLATFORMS=platform1,platform2"
+    task :selected, [:platform] do |_task, args|
+      resolve_platforms([args[:platform]]).each do |platform|
+        run_rb_sys_dock!(platform)
+      end
+    end
+
+    CROSS_PLATFORMS.each do |platform|
+      task_name = platform.tr("-", "_").to_sym
+
+      desc "Cross-compile the native gem for #{platform} via rb-sys-dock"
+      task task_name do
+        run_rb_sys_dock!(platform)
+      end
+    end
+  end
 end

@@ -3,26 +3,77 @@ on:
   push:
     tags:
       - "[0-9]*.[0-9]*.[0-9]*"
+      - "v[0-9]*.[0-9]*.[0-9]*"
 
 jobs:
+  build_source_gem:
+    name: Build source gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4
+          bundler-cache: true
+      - run: bundle exec rake build
+      - name: Upload source gem
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: source-gem
+          path: pkg/*.gem
+          retention-days: 1
+
+  build_native_gems:
+    name: Build native gem (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - x86_64-linux
+          - aarch64-linux
+          - x86_64-darwin
+          - arm64-darwin
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4
+          bundler-cache: true
+      - name: Build native gems
+        run: bundle exec rb-sys-dock --platform ${{ matrix.platform }} --build
+      - name: Upload native gems
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: native-gem-${{ matrix.platform }}
+          path: pkg/*-${{ matrix.platform }}.gem
+          retention-days: 1
+
   release:
-    name: Build source gem + create release
+    name: Create GitHub Release
+    needs:
+      - build_source_gem
+      - build_native_gems
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby-pkgs@v1
-        with:
-          ruby-version: "3.4"
-      - run: gem update --system
-      - run: rake gem
       - name: Extract version
-        run: echo "GEM_VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+        id: extract_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "GEM_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8.0.1
+        with:
+          path: artifacts
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: libfacedetection ${{ env.GEM_VERSION }}
-          files: pkg/*.gem
+          files: artifacts/**/*.gem
           generate_release_notes: true
