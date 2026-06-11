@@ -15,5 +15,5 @@ jobs:
           rustflags: ""
       - run: sudo apt-get update && sudo apt-get install -y libvips
       - run: bundle exec rake build
-      - run: gem install pkg/libfacedetection-*.gem
-      - run: ruby tests/test_detection.rb
+      - run: bundle exec rake compile
+      - run: bundle exec ruby tests/test_detection.rb
