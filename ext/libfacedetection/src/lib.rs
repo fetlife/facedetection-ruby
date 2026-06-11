@@ -51,7 +51,7 @@ fn detect_opencv(content: Vec<u8>) -> Result<RArray> {
     Ok(result)
 }
 
-#[cfg(all(feature = "libfacedetection", feature = "opencv"))]
+#[cfg(all(feature = "libfacedetection_rs", feature = "opencv"))]
 fn detect_libfacedetection(content: Vec<u8>) -> Result<RArray> {
     use opencv::{imgcodecs, prelude::*, types};
 
@@ -83,7 +83,7 @@ fn detect_opencv(_content: Vec<u8>) -> Result<RArray> {
     ))
 }
 
-#[cfg(not(all(feature = "libfacedetection", feature = "opencv")))]
+#[cfg(not(all(feature = "libfacedetection_rs", feature = "opencv")))]
 fn detect_libfacedetection(_content: Vec<u8>) -> Result<RArray> {
     Err(Error::new(
         exception::runtime_error(),
@@ -91,14 +91,14 @@ fn detect_libfacedetection(_content: Vec<u8>) -> Result<RArray> {
     ))
 }
 
-#[cfg(feature = "libfacedetection")]
+#[cfg(feature = "libfacedetection_rs")]
 fn detect_libfacedetection_data(
     bgrdata: *const u8,
     width: i32,
     height: i32,
     step: Option<u32>,
 ) -> Result<RArray> {
-    let facedetect_result = libfacedetection::facedetect_cnn(
+    let facedetect_result = libfacedetection_rs::facedetect_cnn(
         bgrdata,
         width,
         height,
@@ -152,7 +152,7 @@ fn pub_detect_libfacedetection_image_data(
 
 fn features() -> Result<RArray> {
     let result = RArray::new();
-    #[cfg(feature = "libfacedetection")]
+    #[cfg(feature = "libfacedetection_rs")]
     {
         result.push(magnus::Symbol::new("libfacedetection"))?;
     }

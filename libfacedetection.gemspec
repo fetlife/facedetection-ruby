@@ -39,6 +39,6 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "github_repo" => "ssh://github.com/fetlife/facedetection-ruby",
-    "cargo_crate_name" => "libfacedetection-ruby"
+    "cargo_crate_name" => "libfacedetection"
   }
 end

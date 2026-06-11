@@ -265,21 +265,21 @@ checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
 name = "libfacedetection"
+version = "0.0.1"
+dependencies = [
+ "libfacedetection 0.1.0",
+ "magnus",
+ "opencv",
+ "rb-sys",
+]
+
+[[package]]
+name = "libfacedetection"
 version = "0.1.0"
 source = "git+https://github.com/fetlife/libfacedetection-rs.git?rev=7426f33ba101514932a5ef58456761735c7bf3dc#7426f33ba101514932a5ef58456761735c7bf3dc"
 dependencies = [
  "libfacedetection-sys",
  "thiserror",
-]
-
-[[package]]
-name = "libfacedetection-ruby"
-version = "0.0.1"
-dependencies = [
- "libfacedetection",
- "magnus",
- "opencv",
- "rb-sys",
 ]
 
 [[package]]
