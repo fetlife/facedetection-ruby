@@ -31,9 +31,10 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
   spec.extensions = ["ext/libfacedetection/extconf.rb"]
-  spec.add_dependency "rb_sys", "~> 0.9.126"
+  spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rake-compiler", "~> 1.2"
+  spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "ruby-vips"
   spec.add_development_dependency "ffi"
 
