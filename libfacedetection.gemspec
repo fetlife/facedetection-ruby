@@ -19,11 +19,11 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir[
     "Cargo.toml",
+    "Cargo.lock",
     "lib/**/*.rb",
     "ext/**/*",
     "*.gemspec",
     "README.md",
-    "LICENSE.txt"
   ].reject do |path|
     path.match?(%r{\A(?:lib/libfacedetection/(?:.*\.(?:bundle|so|dll|dylib))|ext/libfacedetection/(?:Makefile|mkmf\.log|target/|.*\.(?:bundle|so|dll)))})
   end

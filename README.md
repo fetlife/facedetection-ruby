@@ -10,6 +10,7 @@ This gem is automatically released using Github Releases when a new version tag 
 2. Compiling native extensions for multiple platforms:
    - x86_64-linux (Ubuntu 24.04)
    - aarch64-linux (Ubuntu 24.04 ARM)
+   - x86_64-darwin (macOS)
    - arm64-darwin (macOS)
 
 To create a new release:
@@ -22,4 +23,3 @@ To create a new release:
    ```
 
 You can find all releases on the [GitHub Releases page](https://github.com/fetlife/facedetection-ruby/releases).
-

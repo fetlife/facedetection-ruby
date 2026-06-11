@@ -1,17 +1,33 @@
 name: run-tests
-on: [push]
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
 jobs:
-  build_gem:
-    name: Build and test ruby extension
-    runs-on: ubuntu-latest
+  ruby_extension:
+    name: Ruby ${{ matrix.ruby }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           rustflags: ""
-      - run: sudo apt-get update && sudo apt-get install -y libvips
+      - name: Install libvips on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libvips
+      - name: Install libvips on macOS
+        if: runner.os == 'macOS'
+        run: brew install vips
       - run: bundle exec rake test

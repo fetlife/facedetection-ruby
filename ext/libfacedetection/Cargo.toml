@@ -16,4 +16,5 @@ magnus = { version = "0.8.2" }
 rb-sys = { version = "0.9.126", default-features = false, features = ["stable-api-compiled-fallback"] }
 
 [features]
-default = ["libfacedetection_rs"]
+default = ["libfacedetection"]
+libfacedetection = ["dep:libfacedetection_rs"]
