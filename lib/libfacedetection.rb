@@ -14,9 +14,9 @@ end
 
 begin
   [
-    "libfacedetection/#{Libfacedetection::RUBY_API_VERSION}/libfacedetection_ruby",
-    "libfacedetection/libfacedetection_ruby",
-    "../ext/libfacedetection/libfacedetection_ruby"
+    "libfacedetection/#{Libfacedetection::RUBY_API_VERSION}/libfacedetection",
+    "libfacedetection/libfacedetection",
+    "../ext/libfacedetection/libfacedetection"
   ].each do |path|
     begin
       require_relative path
